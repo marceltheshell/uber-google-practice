@@ -2,7 +2,7 @@ var express = require('express');
 var bodyParser = require('body-parser');
 var app = express();
 var cors = require('cors');
-
+require('dotenv').config(); 
 // Serve assets in /public.
 app.use(express.static(__dirname + '/public'));
 
@@ -10,6 +10,12 @@ app.use(express.static(__dirname + '/public'));
 app.use(bodyParser.urlencoded({
   extended: true
 }));
+
+/*Google Api Key*/
+
+// googleApiKey = process.env.GOOGLE_API_KEY;
+googlePlacesApiKey = process.env.GOOGLE_PLACES_API_KEY;
+googleVerification = process.env.GOOGLE_VERIFICATION;
 
 // Since Mixmax calls this API directly from the client-side, it must be whitelisted.
 var corsOptions = {
@@ -19,7 +25,8 @@ var corsOptions = {
 
 // The editor interface.
 app.get('/estimate', function(req, res) {
-  res.sendFile(__dirname + '/estimate.html');
+  // res.sendFile(__dirname + '/estimate.html');
+  res.render('estimate', {APIKey: googlePlacesApiKey})
 });
 
 
