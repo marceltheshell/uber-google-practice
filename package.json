@@ -1,0 +1,19 @@
+{
+  "name": "mixmax-uber-enhancement",
+  "version": "0.0.1",
+  "description": "Uber App for Mixmax",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon server.js"
+  },
+  "author": "Marcel Degas <marceldegas@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "body-parser": "^1.12.2",
+    "cors": "^2.7.1",
+    "express": "^4.12.3"
+  },
+  "devDependencies": {
+    "nodemon": "^1.7.1"
+  }
+}
