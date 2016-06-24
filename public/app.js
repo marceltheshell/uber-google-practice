@@ -92,7 +92,7 @@ function getRidePrices(origin, destination){
     $.post('/uberPrice', {coordinates: coordinates}, function(data){
         var rides = data.prices;
         $.each( rides, function( i, ride ) {
-            var newListItem = ("<tr><td>" + ride.display_name + "</td><td>" + ride.estimate + "</td><td>" + ride.distance + " miles"+ "</td></tr>");
+            var newListItem = ("<tr><td>" + ride.display_name + "</td><td>" + ride.estimate + "</td></tr>");
             $( "#estimates" ).append( newListItem );
         });
 
