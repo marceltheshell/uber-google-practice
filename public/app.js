@@ -1,16 +1,11 @@
-var autocomplete,
-formattedOriginLtLg,
+var formattedOriginLtLg,
 formattedDestinLtLg,
-autocompleteEnd,
-endAddress, 
-startAddress,
 directionsDisplay,
 map,
 options,
 address,
 origin,
-destination,
-markerArray = [];
+destination
 
 
 $('document').ready(function() {
@@ -26,7 +21,7 @@ $('document').ready(function() {
 
 
 function initAutocomplete() {
-     autocomplete = new google.maps.places.Autocomplete((document.getElementById('start')), options);
+     autocompleteStart = new google.maps.places.Autocomplete((document.getElementById('start')), options);
      autocompleteEnd = new google.maps.places.Autocomplete((document.getElementById('end')), options);
 }
 
@@ -56,7 +51,7 @@ function mapCoordinates(addressOne, addressTwo){
     });
 }
 
-function renderGoogleMap(originCoord, destinCoord){
+function renderGoogleMap(originCoord, destinCoord) {
     var directionsService = new google.maps.DirectionsService();
     $('#map').animate({'height':'384px'},2000, function(){    
         map = new google.maps.Map(document.getElementById("map"),{
@@ -71,30 +66,23 @@ function renderGoogleMap(originCoord, destinCoord){
         });
     });
 
-    //this looks like it could be an issue
+    //the directions are not working because of this line, need to check it out
     var directionsDisplay = new google.maps.DirectionsRenderer({map: map}); 
     
+   
+    var request = {
+      origin:originCoord,
+      destination:destinCoord,
+      travelMode: google.maps.TravelMode.DRIVING   
+    };
 
-
-
-    calcRoute(originCoord, destinCoord)
-
-    function calcRoute(startCoord, endCoord) {
-        var start = startCoord
-        var end = endCoord
-        var request = {
-          origin:start,
-          destination:end,
-          travelMode: google.maps.TravelMode.DRIVING
-        };
-
-        directionsService.route(request, function(result, status) {
-            if (status == google.maps.DirectionsStatus.OK) {
-                directionsDisplay.setDirections(result);
-            }
-        });
-    }
+    directionsService.route(request, function(result, status) {
+        if (status == google.maps.DirectionsStatus.OK) {
+            directionsDisplay.setDirections(result);
+        }
+    });
 }
+    
 
 function getRidePrices(origin, destination){
     var coordinates = {};
