@@ -1,246 +1,188 @@
 var autocomplete,
+formattedOriginLtLg,
+formattedDestinLtLg,
 autocompleteEnd,
-defaultBounds,
+endAddress, 
+startAddress,
+directionsDisplay,
+map,
 options,
 address,
 origin,
 destination,
-markerArray = [],
-map;
+markerArray = [];
+
 
 $('document').ready(function() {
-	console.log(options)
 
-	$('form.findPrice').on('submit',function(e){
-
-		initAutocomplete();
-
-		e.preventDefault();
-		address = $(this).serializeArray();
-		origin = address[0].value;
-		destination = address[1].value;
-		// mapCoordinates(origin, destination);
-		$('.findPrice').trigger('reset');
-
-	});
-
+    $('form.findPrice').on('submit',function(e){
+        e.preventDefault();
+        address = $(this).serializeArray();
+        origin = address[0].value;
+        destination = address[1].value;
+        mapCoordinates(origin, destination);
+    });
 })
 
-function initAutocomplete() {
-  	autocomplete = new google.maps.places.Autocomplete((document.getElementById('start')), options);
+
+// function initAutocomplete() {
+//      autocomplete = new google.maps.places.Autocomplete((document.getElementById('start')), options);
   
-  	autocompleteEnd = new google.maps.places.Autocomplete((document.getElementById('end')), options);
+//      autocompleteEnd = new google.maps.places.Autocomplete((document.getElementById('end')), options);
   
-}
+// }
 
 
 function mapCoordinates(addressOne, addressTwo){
-
-    var StartAddress = addressOne.replace(/\s|,/g,"+");
- 
+    var startAddress = addressOne.replace(/\s|,/g,"+");
     var endAddress = addressTwo.replace(/\s|,/g,"+");
-   	console.log()
+    
     $.when(
-           $.get("https://maps.googleapis.com/maps/api/geocode/json?", {"address" : StartAddress}, function(data){
-              console.log("data, = ", data);
-             var originLtLg = data.results[0].geometry.location;
-            }),
+        $.get("https://maps.googleapis.com/maps/api/geocode/json?", {"address" : startAddress}, function(data){
+          var originLtLg = data.results[0].geometry.location;
+        }),
 
-          $.get("https://maps.googleapis.com/maps/api/geocode/json?", {"address" : endAddress}, function(data){
-            var destinLtLg = data.results[0].geometry.location;
+        $.get("https://maps.googleapis.com/maps/api/geocode/json?", {"address" : endAddress}, function(data){
+          var destinLtLg = data.results[0].geometry.location;
+        })
 
-          })
-    ).then(function(){
+    ).done(function(originLtLg, destinLtLg){    
+        formattedOriginLtLg = originLtLg[0].results[0].geometry.location
+        formattedDestinLtLg = destinLtLg[0].results[0].geometry.location
+        renderGoogleMap(formattedOriginLtLg, formattedDestinLtLg);
 
-    renderGoogleMap(originLtLg,destinLtLg);
+
+        getRidePrices(formattedOriginLtLg, formattedDestinLtLg);
+
+
+
+
+    }).fail(function() {
+        console.log("oops, something went wrong while getting directions");
+
     });
 }
 
 function renderGoogleMap(originCoord, destinCoord){
+  
+    var directionsService = new google.maps.DirectionsService();
+    $('#map').animate({'height':'384px'},2000, function(){    
+        map = new google.maps.Map(document.getElementById("map"),{
+            center:
+              originCoord,
+              destinCoord,
+              zoom:13,
+              zoomControl: false,
+              scaleControl: false,
+              scrollwheel: false,
+              disableDoubleClickZoom: true
 
-    /*Google Maps Directions Variable*/
-    var directionsService = new google.maps.DirectionsService;
+        })
+    })
+  
+    // /*Create a Renderer for Directions and Binds it to the Map*/
+    var directionsDisplay = new google.maps.DirectionsRenderer({map: map}); 
+    
+    /////////// CalcRoute is for Google////////////////////////
+    calcRoute(originCoord, destinCoord)
 
-    $('#map').animate({'height':'384px'},2000, function(){
+    function calcRoute(startCoord, endCoord) {
+        var start = startCoord
+        var end = endCoord
+        var request = {
+          origin:start,
+          destination:end,
+          travelMode: google.maps.TravelMode.DRIVING
+        };
 
-
-      map = new google.maps.Map(document.getElementById("map"),{
-          center:
-          	originCoord,
-          	destinCoord,
-            zoom:13,
-            zoomControl: false,
-            scaleControl: false,
-            scrollwheel: false,
-            disableDoubleClickZoom: true
-      });
-
-      /*Create a Renderer for Directions and Binds it to the Map*/
-      var directionsDisplay = new google.maps.DirectionsRenderer({map: map}); 
-
-      /*Instantiate an Info Window to Hold Steps Text*/
-      ////////////////// possibly not used//////////////////
-      var stepDisplay = new google.maps.InfoWindow;
-      ////////////////// possibly not used//////////////////
-
-
-      /*FS Displays the Route Between the Initial Start and End Selections.*/
-      calculateAndDisplayRoute(directionsDisplay, directionsService, markerArray, stepDisplay, map);
-
-      // getRidePrices(originCoord, destinCoord);
-
+        directionsService.route(request, function(result, status) {
+            if (status == google.maps.DirectionsStatus.OK) {
+                directionsDisplay.setDirections(result);
+            }
         });
+
+    }
 
 }
 
-/////////////////////////////
-
-// /*Auto Complete Function*/
-
-// function initAutocomplete() {
-  
-//   autocomplete = new google.maps.places.Autocomplete((document.getElementById('orin')), options);
-  
-
-//   autocompleteEnd = new google.maps.places.Autocomplete((document.getElementById('destin')), options);
-  
-// }
 
 
-// /*Generate Coordinates*/
-
-// function mapCoordinates(addressOne, addressTwo){
-
-//     var StartAddress = addressOne.replace(/\s|,/g,"+");
- 
-//     var endAddress = addressTwo.replace(/\s|,/g,"+");
-   
-//     $.when(
-//            $.get("https://maps.googleapis.com/maps/api/geocode/json?", {"address" : StartAddress}, function(data){
-//               console.log("data, = ", data);
-//              var originLtLg = data.results[0].geometry.location;
-//             }),
-
-//           $.get("https://maps.googleapis.com/maps/api/geocode/json?", {"address" : endAddress}, function(data){
-//             var destinLtLg = data.results[0].geometry.location;
-
-//           })
-//     ).then(function(){
-
-//     renderGoogleMap(originLtLg,destinLtLg);
-     
-//     /*End Success Function*/
-//     });
-// }
 
 
-// /*Generate Map Google*/
-
-// function renderGoogleMap(originCoord, destinCoord){
-
-
-//     /*Google Maps Directions Variable*/
-
-//     var directionsService = new google.maps.DirectionsService;
-
-//     $('#map').animate({'height':'384px'},2000, function(){
+/*FS Displays the Route Between the Initial Start and End Selections.*/
+// calculateAndDisplayRoute(directionsDisplay, directionsService, markerArray, stepDisplay, map);
 
 
-//       map = new google.maps.Map(document.getElementById("map"),{
-//           center:
-//           	originCoord,
-//           	destinCoord,
-//             zoom:13,
-//             zoomControl: false,
-//             scaleControl: false,
-//             scrollwheel: false,
-//             disableDoubleClickZoom: true
-//       });
-
-//       /*Create a Renderer for Directions and Binds it to the Map*/
-//       var directionsDisplay = new google.maps.DirectionsRenderer({map: map}); 
-
-//       /*Instantiate an Info Window to Hold Steps Text*/
-//       ////////////////// possibly not used//////////////////
-//       var stepDisplay = new google.maps.InfoWindow;
-//       ////////////////// possibly not used//////////////////
 
 
-//       /*FS Displays the Route Between the Initial Start and End Selections.*/
-//       calculateAndDisplayRoute(directionsDisplay, directionsService, markerArray, stepDisplay, map);
-
-//       getRidePrices(originCoord, destinCoord);
-
-//           End Animate Function
-//         });
-
-// /* End Render Google Map Function*/
-// }
 
 
-// /* Calculate Display Route Function*/
+
+/* Calculate Display Route Function*/
 
 // function calculateAndDisplayRoute(directionsDisplay, directionsService, markerArray, stepDisplay, map) {
       
-//       /*First, remove any existing markers from the map.*/
-//       for (var i = 0; i < markerArray.length; i++) {
-//         markerArray[i].setMap(null);
-//       }
-
-//      /* Retrieve the Start and End Locations and Create a DirectionsRequest Using DRIVING Directions.*/
-      
-//       directionsService.route({
-//                                 origin: origin,
-//                                 destination: destination,
-//                                 travelMode: google.maps.TravelMode.DRIVING
-//                               }, 
-//                               function(response, status){
-
-//                                   // Route the directions and pass the response to a function to create
-//                                   // markers for each step.
-//                                 if (status === google.maps.DirectionsStatus.OK) {
-
-//                                       document.getElementById('warnings-panel').innerHTML = '<b>' + response.routes[0].warnings + '</b>';
+//   First, remove any existing markers from the map.
+//   for (var i = 0; i < markerArray.length; i++) {
+//     markerArray[i].setMap(null);
+//   }
 
 
-//                                       directionsDisplay.setDirections(response);
-//                                       // showSteps(response, markerArray, stepDisplay, map);
-//                                   } 
-//                                 else {
-//                                     window.alert('Directions request failed due to ' + status);
-//                                 }
-//                             });
+
+
+  /* Retrieve the Start and End Locations and Create a DirectionsRequest Using DRIVING Directions.*/
+ //  directionsService.route({
+ //                            origin: origin,
+ //                            destination: destination,
+ //                            travelMode: google.maps.TravelMode.DRIVING
+ //                          }, 
+ //                          function(response, status){
+
+ //                              // Route the directions and pass the response to a function to create
+ //                              // markers for each step.
+ //                            if (status === google.maps.DirectionsStatus.OK) {
+
+ //                                  document.getElementById('warnings-panel').innerHTML = '<b>' + response.routes[0].warnings + '</b>';
+
+
+ //                                  directionsDisplay.setDirections(response);
+ //                                  // showSteps(response, markerArray, stepDisplay, map);
+ //                              } 
+ //                            else {
+ //                                window.alert('Directions request failed due to ' + status);
+ //                            }
+ //                        });
  
-//  }
+ // }
 
 
 
 // /*Request Ride Prices Function*/
 
-// var getRidePrices = function(origin, destination){
+function getRidePrices(origin, destination){
+    var coordinates = {};
+    coordinates.lat1 = origin.lat;
+    coordinates.lng1 = origin.lng;
+    coordinates.lat2 = destination.lat;
+    coordinates.lng2 = destination.lng;
 
-//       var coordinates = {};
-//       coordinates.lat1 = origin.lat;
-//       coordinates.lng1 = origin.lng;
-//       coordinates.lat2 = destination.lat;
-//       coordinates.lng2 = destination.lng;
-
-//       console.log("coordinates object", coordinates);
-
-     
-//      $.get('/prices', coordinates, function(prices){
+    $.post('/uberPrice', {coordinates: coordinates}, function(data){
+        var rides = data.prices;
+        $.each( rides, function( i, ride ) {
             
-//             console.log("prices coming back ", prices.prices);;
+            console.log(ride);
+            var newListItem = ("<tr><td>" + ride.display_name + "</td><td>" + ride.estimate + "</td><td>" + ride.distance + " miles"+ "</td></tr>");
+            // var newListItem = "<li>" + ride.display_name + "</li>";
+            $( "#estimates" ).append( newListItem );
+        });
 
-//             var rides = prices.prices;
+    });
 
-//             rides.forEach(function(ride) {
-//             renderRides(ride);
-//             });
+};
 
-//      });
 
-// };
+
+
 
 
 
