@@ -52,7 +52,9 @@ function mapCoordinates(addressOne, addressTwo){
 }
 
 function renderGoogleMap(originCoord, destinCoord) {
-    var directionsService = new google.maps.DirectionsService();
+    var directionsService = new google.maps.DirectionsService;
+    var directionsDisplay = new google.maps.DirectionsRenderer;
+    
     $('#map').animate({'height':'384px'},2000, function(){    
         map = new google.maps.Map(document.getElementById("map"),{
             center:
@@ -64,11 +66,8 @@ function renderGoogleMap(originCoord, destinCoord) {
               scrollwheel: false,
               disableDoubleClickZoom: true
         });
+        directionsDisplay.setMap(map);
     });
-
-    //the directions are not working because of this line, need to check it out
-    var directionsDisplay = new google.maps.DirectionsRenderer({map: map}); 
-    
    
     var request = {
       origin:originCoord,
